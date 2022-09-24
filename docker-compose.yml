@@ -1,0 +1,52 @@
+version: '3.4'
+
+services:
+
+  mvcwebapp:
+    image: mvcwebapp
+    build:
+      context: .
+      dockerfile: ClientApp/MVCWebApp/Dockerfile
+    environment:
+     - CatalogUrl=http://productcatalog.api
+     - CartBaseUrl=http://shoppingbasket.api
+    depends_on:
+     - productcatalog.api
+
+  productcatalog.api:
+    image: productcatalogapi
+    build:
+      context: .
+      dockerfile: Services/ProductCatalog/ProductCatalog.API/Dockerfile
+    environment:
+     - ConnectionStrings__ProductCatalogContext= Server=mssqlserver;Database=ProductCatalogContextDb;uid=sa;pwd=Password_*123;MultipleActiveResultSets=true
+    depends_on:
+     - mssqlserver
+     
+  mssqlserver:
+    image: "mcr.microsoft.com/mssql/server:2019-latest"
+    ports:
+     - "1422:1433" 
+    environment:
+     - SA_PASSWORD=Password_*123
+     - ACCEPT_EULA=Y
+    volumes:
+    - sqlvolume:/var/opt/mssql
+
+  shoppingbasket.api:
+    image: shoppingbasketapi
+    build:
+      context: .
+      dockerfile: Services/ShoppingBasket/ShoppingBasket.API/Dockerfile
+    environment:
+     - RedisConnectionString=redis
+    depends_on:
+     - redis
+
+  redis:
+    image: redis 
+
+
+volumes:
+ sqlvolume:
+
